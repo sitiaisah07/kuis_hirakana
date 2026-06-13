@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hiragana & Katakana</title>
+    <title>Hiragana, Katakana & Kanji</title>
     <style>
       :root {
         --bg: #fdf6ec;
@@ -326,6 +326,77 @@
         margin: 0 auto 16px;
         padding: 0 16px;
       }
+      .kanji-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+        max-width: 1000px;
+        margin: 0 auto 60px;
+        padding: 0 16px;
+      }
+      .kanji-card {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px 16px;
+        transition: box-shadow 0.15s, transform 0.15s;
+      }
+      .kanji-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+      }
+      .kanji-card .speak-btn {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        cursor: pointer;
+        opacity: 0.6;
+        color: inherit;
+      }
+      .kanji-card .speak-btn:hover {
+        opacity: 1;
+      }
+      .kanji-card .kanji-char {
+        font-size: 2.6rem;
+        color: var(--accent);
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+      .kanji-card .kanji-meaning {
+        font-weight: 600;
+        font-size: 1.05rem;
+        margin-bottom: 6px;
+      }
+      .kanji-card .kanji-reading {
+        font-size: 0.85rem;
+        color: #777;
+        margin-bottom: 8px;
+      }
+      .kanji-card .kanji-reading b {
+        color: var(--accent2);
+        font-weight: 600;
+      }
+      .kanji-card .kanji-example {
+        font-size: 0.85rem;
+        color: var(--ink);
+        background: var(--bg);
+        border-radius: 8px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+      }
+      .kanji-card .kanji-example .ex-jp {
+        font-weight: 600;
+      }
+      .kanji-card .kanji-example .ex-reading {
+        color: #999;
+      }
+      .kanji-card .kanji-example .ex-mean {
+        color: #777;
+      }
     </style>
   </head>
   <body>
@@ -337,6 +408,7 @@
     <div class="tabs">
       <button class="active" onclick="showTab('hira')">Hiragana</button>
       <button onclick="showTab('kata')">Katakana</button>
+      <button onclick="showTab('kanji')">Kanji</button>
       <button onclick="showTab('quiz')">Kuis</button>
     </div>
 
@@ -347,6 +419,13 @@
         Handakuten
       </button>
       <button class="sub-btn" onclick="showSub('yoon')">Yōon</button>
+    </div>
+
+    <div class="subtabs" id="kanji-subtabs" style="display:none">
+      <button class="sub-btn active" onclick="showKanjiGroup(0)">1-20</button>
+      <button class="sub-btn" onclick="showKanjiGroup(1)">21-40</button>
+      <button class="sub-btn" onclick="showKanjiGroup(2)">41-60</button>
+      <button class="sub-btn" onclick="showKanjiGroup(3)">61-80</button>
     </div>
 
     <div class="audio-note" id="audio-note" style="display:none">
@@ -368,6 +447,10 @@
       <div class="grid sub-grid" id="kata-yoon"></div>
     </section>
 
+    <section id="kanji">
+      <div class="kanji-grid" id="kanji-grid"></div>
+    </section>
+
     <section id="quiz">
       <div class="quiz-box">
         <div class="quiz-mode" id="quiz-mode">
@@ -381,11 +464,13 @@
             Dakuten/Handakuten
           </button>
           <button class="mode-btn" onclick="startQuiz('yoon')">Yōon</button>
+          <button class="mode-btn" onclick="startQuiz('kanji')">Kanji</button>
           <button class="mode-btn" onclick="startQuiz('all')">Semua</button>
         </div>
         <p class="quiz-instructions" id="quiz-instructions">
-          Isi romaji lalu tekan <strong>Enter</strong> untuk cek tiap kartu
-          (maks. 2x percobaan). Klik 🔊 untuk dengar bunyi kana. Klik
+          Isi romaji (atau arti untuk mode Kanji) lalu tekan
+          <strong>Enter</strong> untuk cek tiap kartu (maks. 2x percobaan).
+          Klik 🔊 untuk dengar bunyinya. Klik
           <strong>Finish Quiz</strong> jika sudah selesai.
         </p>
 
@@ -408,7 +493,7 @@
       </div>
     </section>
 
-    <footer>Dibuat untuk belajar aksara Jepang dasar 🇯🇵 oleh AIZ</footer>
+    <footer>Dibuat untuk belajar aksara Jepang dasar 🇯🇵 oleh Aiz</footer>
 
     <script>
       const hiragana = [
@@ -644,7 +729,94 @@
         ["ヴォ", "vo"],
       ];
 
-      // ===== Text-to-speech =====
+      // ===== Kanji N5 (80 kanji) =====
+      // format: [kanji, onyomi, kunyomi, arti, [contoh_kata, bacaan, arti_contoh]]
+      const kanjiN5 = [
+        ["一", "ICHI", "hito-", "satu", ["一人", "hitori", "satu orang"]],
+        ["二", "NI", "futa-", "dua", ["二月", "nigatsu", "bulan Februari"]],
+        ["三", "SAN", "mit-", "tiga", ["三日", "mikka", "tiga hari/tgl 3"]],
+        ["四", "SHI", "yon/yo-", "empat", ["四人", "yonin", "empat orang"]],
+        ["五", "GO", "itsu-", "lima", ["五月", "gogatsu", "bulan Mei"]],
+        ["六", "ROKU", "mut-", "enam", ["六日", "muika", "enam hari/tgl 6"]],
+        ["七", "SHICHI", "nana-", "tujuh", ["七月", "shichigatsu", "bulan Juli"]],
+        ["八", "HACHI", "ya-", "delapan", ["八時", "hachiji", "jam 8"]],
+        ["九", "KYUU", "kokono-", "sembilan", ["九月", "kugatsu", "bulan September"]],
+        ["十", "JUU", "too", "sepuluh", ["十分", "juppun", "10 menit"]],
+        ["百", "HYAKU", "-", "seratus", ["百円", "hyakuen", "seratus yen"]],
+        ["千", "SEN", "-", "seribu", ["三千", "sanzen", "tiga ribu"]],
+        ["万", "MAN", "-", "sepuluh ribu", ["一万円", "ichimanen", "sepuluh ribu yen"]],
+        ["円", "EN", "maru-", "yen / lingkaran", ["百円", "hyakuen", "seratus yen"]],
+        ["年", "NEN", "toshi", "tahun", ["来年", "rainen", "tahun depan"]],
+        ["月", "GETSU", "tsuki", "bulan", ["月曜日", "getsuyoubi", "hari Senin"]],
+        ["日", "NICHI", "hi/-bi", "hari / matahari", ["日本", "nihon", "Jepang"]],
+        ["時", "JI", "toki", "waktu / jam", ["時間", "jikan", "waktu"]],
+        ["分", "BUN/FUN", "wa-", "menit / bagian", ["五分", "gofun", "5 menit"]],
+        ["半", "HAN", "naka-", "setengah", ["三時半", "sanjihan", "jam setengah 4"]],
+        ["人", "JIN/NIN", "hito", "orang", ["日本人", "nihonjin", "orang Jepang"]],
+        ["子", "SHI", "ko", "anak", ["子供", "kodomo", "anak-anak"]],
+        ["女", "JO", "onna", "perempuan", ["女の子", "onnanoko", "anak perempuan"]],
+        ["男", "DAN", "otoko", "laki-laki", ["男の子", "otokonoko", "anak laki-laki"]],
+        ["私", "SHI", "watashi", "saya", ["私の", "watashino", "milik saya"]],
+        ["友", "YUU", "tomo", "teman", ["友達", "tomodachi", "teman"]],
+        ["父", "FU", "chichi", "ayah", ["お父さん", "otousan", "ayah (sopan)"]],
+        ["母", "BO", "haha", "ibu", ["お母さん", "okaasan", "ibu (sopan)"]],
+        ["兄", "KEI", "ani", "kakak laki-laki", ["お兄さん", "oniisan", "kakak laki-laki (sopan)"]],
+        ["姉", "SHI", "ane", "kakak perempuan", ["お姉さん", "oneesan", "kakak perempuan (sopan)"]],
+        ["先", "SEN", "saki", "sebelum / depan", ["先生", "sensei", "guru"]],
+        ["生", "SEI", "i-/u-", "hidup / lahir", ["先生", "sensei", "guru"]],
+        ["学", "GAKU", "mana-", "belajar", ["学校", "gakkou", "sekolah"]],
+        ["校", "KOU", "-", "sekolah", ["学校", "gakkou", "sekolah"]],
+        ["生徒", "SEI/TO", "-", "murid", ["学生", "gakusei", "murid/mahasiswa"]],
+        ["本", "HON", "moto", "buku / asli", ["本屋", "honya", "toko buku"]],
+        ["語", "GO", "kata-", "bahasa", ["日本語", "nihongo", "bahasa Jepang"]],
+        ["国", "KOKU", "kuni", "negara", ["外国", "gaikoku", "luar negeri"]],
+        ["外", "GAI", "soto", "luar", ["外国人", "gaikokujin", "orang asing"]],
+        ["中", "CHUU", "naka", "tengah / dalam", ["中国", "chuugoku", "Tiongkok"]],
+        ["上", "JOU", "ue", "atas", ["上手", "jouzu", "pintar/ahli"]],
+        ["下", "KA", "shita", "bawah", ["下手", "shita/heta", "tidak mahir"]],
+        ["大", "DAI/TAI", "oo-", "besar", ["大学", "daigaku", "universitas"]],
+        ["小", "SHOU", "ko-/o-", "kecil", ["小学校", "shougakkou", "SD"]],
+        ["長", "CHOU", "naga-", "panjang / pemimpin", ["社長", "shachou", "presiden direktur"]],
+        ["高", "KOU", "taka-", "tinggi / mahal", ["高い", "takai", "tinggi/mahal"]],
+        ["新", "SHIN", "atara-", "baru", ["新聞", "shinbun", "koran"]],
+        ["古", "KO", "furu-", "lama/tua (benda)", ["古い", "furui", "lama/tua"]],
+        ["前", "ZEN", "mae", "depan / sebelum", ["午前", "gozen", "pagi (AM)"]],
+        ["後", "GO", "ushiro/ato", "belakang / sesudah", ["午後", "gogo", "siang (PM)"]],
+        ["午", "GO", "-", "siang hari", ["午後", "gogo", "siang (PM)"]],
+        ["今", "KON", "ima", "sekarang", ["今日", "kyou", "hari ini"]],
+        ["何", "KA", "nani/nan", "apa", ["何時", "nanji", "jam berapa"]],
+        ["毎", "MAI", "-", "setiap", ["毎日", "mainichi", "setiap hari"]],
+        ["週", "SHUU", "-", "minggu", ["今週", "konshuu", "minggu ini"]],
+        ["曜", "YOU", "-", "hari (dlm minggu)", ["火曜日", "kayoubi", "hari Selasa"]],
+        ["朝", "CHOU", "asa", "pagi", ["朝ご飯", "asagohan", "sarapan"]],
+        ["昼", "CHUU", "hiru", "siang", ["昼ご飯", "hirugohan", "makan siang"]],
+        ["夜", "YA", "yoru", "malam", ["今夜", "konya", "malam ini"]],
+        ["食", "SHOKU", "ku-/ta-", "makan", ["食べ物", "tabemono", "makanan"]],
+        ["飲", "IN", "no-", "minum", ["飲み物", "nomimono", "minuman"]],
+        ["見", "KEN", "mi-", "lihat", ["見る", "miru", "melihat"]],
+        ["聞", "BUN", "ki-", "dengar / tanya", ["新聞", "shinbun", "koran"]],
+        ["話", "WA", "hana-", "bicara / cerita", ["話す", "hanasu", "berbicara"]],
+        ["読", "DOKU", "yo-", "baca", ["読む", "yomu", "membaca"]],
+        ["書", "SHO", "ka-", "tulis", ["書く", "kaku", "menulis"]],
+        ["買", "BAI", "ka-", "beli", ["買う", "kau", "membeli"]],
+        ["行", "KOU/GYOU", "i-", "pergi", ["行く", "iku", "pergi"]],
+        ["来", "RAI", "ku-", "datang", ["来る", "kuru", "datang"]],
+        ["出", "SHUTSU", "de-/da-", "keluar", ["出口", "deguchi", "pintu keluar"]],
+        ["入", "NYUU", "hai-/i-", "masuk", ["入口", "iriguchi", "pintu masuk"]],
+        ["立", "RITSU", "ta-", "berdiri", ["立つ", "tatsu", "berdiri"]],
+        ["休", "KYUU", "yasu-", "istirahat / libur", ["休み", "yasumi", "libur/istirahat"]],
+        ["山", "SAN", "yama", "gunung", ["富士山", "fujisan", "Gunung Fuji"]],
+        ["川", "SEN", "kawa", "sungai", ["川下り", "kawakudari", "menyusuri sungai"]],
+        ["天", "TEN", "ame-", "langit", ["天気", "tenki", "cuaca"]],
+        ["気", "KI", "-", "udara / perasaan", ["天気", "tenki", "cuaca"]],
+        ["車", "SHA", "kuruma", "mobil", ["電車", "densha", "kereta listrik"]],
+        ["電", "DEN", "-", "listrik", ["電話", "denwa", "telepon"]],
+        ["駅", "EKI", "-", "stasiun", ["駅前", "ekimae", "depan stasiun"]],
+        ["道", "DOU", "michi", "jalan", ["道路", "douro", "jalan raya"]],
+        ["店", "TEN", "mise", "toko", ["店員", "ten-in", "pegawai toko"]],
+        ["家", "KA", "ie/uchi", "rumah", ["家族", "kazoku", "keluarga"]],
+      ];
+
       let jpVoice = null;
       function pickJapaneseVoice() {
         const voices = window.speechSynthesis
@@ -703,6 +875,47 @@
       buildGrid("kata-handakuten", katakanaHandaku);
       buildGrid("kata-yoon", katakanaYoon);
 
+      // ===== Kanji rendering =====
+      function buildKanjiGrid(data) {
+        const grid = document.getElementById("kanji-grid");
+        grid.innerHTML = "";
+        data.forEach(([kanji, on, kun, meaning, example]) => {
+          const card = document.createElement("div");
+          card.className = "kanji-card";
+          const [exJp, exReading, exMeaning] = example;
+          card.innerHTML = `
+            <button class="speak-btn" type="button" aria-label="Dengarkan ${kanji}">🔊</button>
+            <div class="kanji-char">${kanji}</div>
+            <div class="kanji-meaning">${meaning}</div>
+            <div class="kanji-reading">On: <b>${on}</b> &nbsp; Kun: <b>${kun}</b></div>
+            <div class="kanji-example">
+              <span class="ex-jp">${exJp}</span>
+              <span class="ex-reading">(${exReading})</span><br>
+              <span class="ex-mean">${exMeaning}</span>
+            </div>
+          `;
+          card.querySelector(".speak-btn").onclick = (e) => {
+            e.stopPropagation();
+            speakKana(exJp || kanji);
+          };
+          grid.appendChild(card);
+        });
+      }
+
+      const kanjiGroupSize = 20;
+      function showKanjiGroup(groupIndex) {
+        document
+          .querySelectorAll("#kanji-subtabs .sub-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll("#kanji-subtabs .sub-btn")
+          [groupIndex].classList.add("active");
+        const start = groupIndex * kanjiGroupSize;
+        const end = start + kanjiGroupSize;
+        buildKanjiGrid(kanjiN5.slice(start, end));
+      }
+      showKanjiGroup(0);
+
       function showSub(sub) {
         document
           .querySelectorAll(".sub-grid")
@@ -729,9 +942,12 @@
           .querySelector(`.tabs button[onclick="showTab('${tab}')"]`)
           .classList.add("active");
         document.getElementById("subtabs").style.display =
-          tab === "quiz" ? "none" : "flex";
-        document.getElementById("audio-note").style.display =
-          !jpVoice && tab !== "quiz" ? "block" : !jpVoice ? "block" : "none";
+          tab === "hira" || tab === "kata" ? "flex" : "none";
+        document.getElementById("kanji-subtabs").style.display =
+          tab === "kanji" ? "flex" : "none";
+        document.getElementById("audio-note").style.display = !jpVoice
+          ? "block"
+          : "none";
       }
 
       // ===== Quiz =====
@@ -746,6 +962,10 @@
           katakanaHandaku
         ),
         yoon: hiraganaYoon.concat(katakanaYoon),
+        kanji: kanjiN5.map(([k, on, kun, meaning]) => [
+          k,
+          meaning.split(" / ")[0].trim().toLowerCase(),
+        ]),
         all: hiragana.concat(
           katakana,
           hiraganaDaku,
@@ -769,6 +989,7 @@
 
         quizSet = quizSets[mode].slice().sort(() => Math.random() - 0.5);
 
+        const placeholder = mode === "kanji" ? "arti (ID)" : "romaji";
         const grid = document.getElementById("kana-grid");
         grid.innerHTML = "";
         quizSet.forEach((pair, i) => {
@@ -779,7 +1000,7 @@
           card.innerHTML = `
       <button class="speak-btn" type="button" aria-label="Dengarkan ${pair[0]}">🔊</button>
       <div class="kana-char">${pair[0]}</div>
-      <input type="text" autocomplete="off" data-index="${i}" placeholder="romaji">
+      <input type="text" autocomplete="off" data-index="${i}" placeholder="${placeholder}">
       <div class="answer-hint"></div>
     `;
           card.querySelector(".speak-btn").onclick = (e) => {
