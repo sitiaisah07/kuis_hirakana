@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hiragana & Katakana</title>
+    <style>
+      :root {
+        --bg: #fdf6ec;
+        --ink: #2b2b2b;
+        --accent: #c1485e;
+        --accent2: #3b6e8f;
+        --card: #ffffff;
+        --line: #e6dccb;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      header {
+        text-align: center;
+        padding: 48px 16px 24px;
+      }
+      header h1 {
+        font-size: 2.4rem;
+        margin: 0;
+        letter-spacing: 2px;
+      }
+      header h1 span {
+        font-size: 3rem;
+        display: block;
+        color: var(--accent);
+      }
+      header p {
+        color: #777;
+        margin-top: 8px;
+      }
+      .tabs {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 24px 0;
+      }
+      .tabs button {
+        padding: 10px 28px;
+        border: 2px solid var(--accent);
+        background: transparent;
+        color: var(--accent);
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+      .tabs button.active {
+        background: var(--accent);
+        color: #fff;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 12px;
+        max-width: 900px;
+        margin: 0 auto 60px;
+        padding: 0 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 6px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+      }
+      .card .kana {
+        font-size: 2rem;
+        display: block;
+      }
+      .card .romaji {
+        color: #999;
+        font-size: 0.85rem;
+        margin-top: 4px;
+      }
+      .card.flipped {
+        background: var(--accent2);
+        color: #fff;
+      }
+      .card.flipped .romaji {
+        color: #e0eef5;
+      }
+      section {
+        display: none;
+      }
+      section.active {
+        display: block;
+      }
+      .subtabs {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin: 0 0 20px;
+        flex-wrap: wrap;
+      }
+      .sub-btn {
+        padding: 6px 16px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #888;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      .sub-btn.active {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .sub-grid {
+        display: none !important;
+      }
+      .sub-grid.active {
+        display: grid !important;
+      }
+      footer {
+        text-align: center;
+        padding: 24px;
+        color: #aaa;
+        font-size: 0.85rem;
+      }
+      .quiz-box {
+        max-width: 1000px;
+        margin: 0 auto 60px;
+        padding: 0 16px;
+      }
+      .quiz-mode {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .mode-btn {
+        padding: 6px 16px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #888;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      .mode-btn.active {
+        background: var(--accent2);
+        color: #fff;
+        border-color: var(--accent2);
+      }
+      .mode-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .quiz-instructions {
+        text-align: center;
+        color: #999;
+        margin-bottom: 24px;
+      }
+      .kana-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+      .kana-card {
+        background: var(--accent2);
+        color: #fff;
+        border-radius: 12px;
+        padding: 18px 10px;
+        text-align: center;
+        transition: background 0.2s;
+      }
+      .kana-card .kana-char {
+        font-size: 2.2rem;
+        margin-bottom: 12px;
+      }
+      .kana-card input {
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 6px;
+        text-align: center;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      .kana-card input:focus {
+        outline: 2px solid #fff;
+      }
+      .kana-card.correct {
+        background: #5cb85c;
+      }
+      .kana-card.wrong {
+        background: #d9534f;
+      }
+      .kana-card.wrong input {
+        background: #fdecea;
+      }
+      .kana-card.correct input {
+        background: #eaf7ea;
+      }
+      .kana-card .answer-hint {
+        margin-top: 6px;
+        font-size: 0.8rem;
+        color: #fff;
+        display: none;
+      }
+      .kana-card.wrong .answer-hint {
+        display: block;
+      }
+      .quiz-actions {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .finish-btn {
+        padding: 12px 36px;
+        border: none;
+        background: var(--accent2);
+        color: #fff;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .finish-btn:hover {
+        opacity: 0.9;
+      }
+      .quiz-result {
+        display: none;
+        text-align: center;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 32px 24px;
+        margin-top: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      }
+      .quiz-result.show {
+        display: block;
+      }
+      .quiz-result h2 {
+        margin: 0 0 8px;
+        color: var(--accent2);
+      }
+      .quiz-result p {
+        color: #777;
+        margin: 0 0 18px;
+        font-size: 1.1rem;
+      }
+      .result-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+      }
+      .retry-btn,
+      .home-btn {
+        padding: 10px 28px;
+        border: none;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.95rem;
+      }
+      .retry-btn {
+        background: var(--accent2);
+        color: #fff;
+      }
+      .home-btn {
+        background: var(--accent);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Belajar Aksara Jepang<span>ひらがな・カタカナ</span></h1>
+      <p>Klik kartu untuk melihat cara bacanya (romaji)</p>
+    </header>
+
+    <div class="tabs">
+      <button class="active" onclick="showTab('hira')">Hiragana</button>
+      <button onclick="showTab('kata')">Katakana</button>
+      <button onclick="showTab('quiz')">Kuis</button>
+    </div>
+
+    <div class="subtabs" id="subtabs">
+      <button class="sub-btn active" onclick="showSub('dasar')">Dasar</button>
+      <button class="sub-btn" onclick="showSub('dakuten')">Dakuten</button>
+      <button class="sub-btn" onclick="showSub('handakuten')">
+        Handakuten
+      </button>
+      <button class="sub-btn" onclick="showSub('yoon')">Yōon</button>
+    </div>
+
+    <section id="hira" class="active">
+      <div class="grid sub-grid active" id="hira-dasar"></div>
+      <div class="grid sub-grid" id="hira-dakuten"></div>
+      <div class="grid sub-grid" id="hira-handakuten"></div>
+      <div class="grid sub-grid" id="hira-yoon"></div>
+    </section>
+
+    <section id="kata">
+      <div class="grid sub-grid active" id="kata-dasar"></div>
+      <div class="grid sub-grid" id="kata-dakuten"></div>
+      <div class="grid sub-grid" id="kata-handakuten"></div>
+      <div class="grid sub-grid" id="kata-yoon"></div>
+    </section>
+
+    <section id="quiz">
+      <div class="quiz-box">
+        <div class="quiz-mode" id="quiz-mode">
+          <button class="mode-btn active" onclick="startQuiz('hira')">
+            Hiragana Dasar
+          </button>
+          <button class="mode-btn" onclick="startQuiz('kata')">
+            Katakana Dasar
+          </button>
+          <button class="mode-btn" onclick="startQuiz('daku')">
+            Dakuten/Handakuten
+          </button>
+          <button class="mode-btn" onclick="startQuiz('yoon')">Yōon</button>
+          <button class="mode-btn" onclick="startQuiz('all')">Semua</button>
+        </div>
+        <p class="quiz-instructions" id="quiz-instructions">
+          Isi romaji lalu tekan <strong>Enter</strong> untuk cek tiap kartu
+          (maks. 2x percobaan). Klik <strong>Finish Quiz</strong> jika sudah
+          selesai.
+        </p>
+
+        <div class="kana-grid" id="kana-grid"></div>
+
+        <div class="quiz-actions">
+          <button class="finish-btn" id="finish-btn" onclick="finishQuiz()">
+            Finish Quiz
+          </button>
+        </div>
+
+        <div class="quiz-result" id="quiz-result">
+          <h2 id="result-title"></h2>
+          <p id="result-score"></p>
+          <div class="result-actions">
+            <button class="retry-btn" onclick="retryQuiz()">Ulangi</button>
+            <button class="home-btn" onclick="goHome()">Kembali ke Home</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>Dibuat untuk belajar aksara Jepang dasar 🇯🇵</footer>
+
+    <script>
+      const hiragana = [
+        ["あ", "a"],
+        ["い", "i"],
+        ["う", "u"],
+        ["え", "e"],
+        ["お", "o"],
+        ["か", "ka"],
+        ["き", "ki"],
+        ["く", "ku"],
+        ["け", "ke"],
+        ["こ", "ko"],
+        ["さ", "sa"],
+        ["し", "shi"],
+        ["す", "su"],
+        ["せ", "se"],
+        ["そ", "so"],
+        ["た", "ta"],
+        ["ち", "chi"],
+        ["つ", "tsu"],
+        ["て", "te"],
+        ["と", "to"],
+        ["な", "na"],
+        ["に", "ni"],
+        ["ぬ", "nu"],
+        ["ね", "ne"],
+        ["の", "no"],
+        ["は", "ha"],
+        ["ひ", "hi"],
+        ["ふ", "fu"],
+        ["へ", "he"],
+        ["ほ", "ho"],
+        ["ま", "ma"],
+        ["み", "mi"],
+        ["む", "mu"],
+        ["め", "me"],
+        ["も", "mo"],
+        ["や", "ya"],
+        ["ゆ", "yu"],
+        ["よ", "yo"],
+        ["ら", "ra"],
+        ["り", "ri"],
+        ["る", "ru"],
+        ["れ", "re"],
+        ["ろ", "ro"],
+        ["わ", "wa"],
+        ["を", "wo"],
+        ["ん", "n"],
+      ];
+
+      const katakana = [
+        ["ア", "a"],
+        ["イ", "i"],
+        ["ウ", "u"],
+        ["エ", "e"],
+        ["オ", "o"],
+        ["カ", "ka"],
+        ["キ", "ki"],
+        ["ク", "ku"],
+        ["ケ", "ke"],
+        ["コ", "ko"],
+        ["サ", "sa"],
+        ["シ", "shi"],
+        ["ス", "su"],
+        ["セ", "se"],
+        ["ソ", "so"],
+        ["タ", "ta"],
+        ["チ", "chi"],
+        ["ツ", "tsu"],
+        ["テ", "te"],
+        ["ト", "to"],
+        ["ナ", "na"],
+        ["ニ", "ni"],
+        ["ヌ", "nu"],
+        ["ネ", "ne"],
+        ["ノ", "no"],
+        ["ハ", "ha"],
+        ["ヒ", "hi"],
+        ["フ", "fu"],
+        ["ヘ", "he"],
+        ["ホ", "ho"],
+        ["マ", "ma"],
+        ["ミ", "mi"],
+        ["ム", "mu"],
+        ["メ", "me"],
+        ["モ", "mo"],
+        ["ヤ", "ya"],
+        ["ユ", "yu"],
+        ["ヨ", "yo"],
+        ["ラ", "ra"],
+        ["リ", "ri"],
+        ["ル", "ru"],
+        ["レ", "re"],
+        ["ロ", "ro"],
+        ["ワ", "wa"],
+        ["ヲ", "wo"],
+        ["ン", "n"],
+      ];
+
+      const hiraganaDaku = [
+        ["が", "ga"],
+        ["ぎ", "gi"],
+        ["ぐ", "gu"],
+        ["げ", "ge"],
+        ["ご", "go"],
+        ["ざ", "za"],
+        ["じ", "ji"],
+        ["ず", "zu"],
+        ["ぜ", "ze"],
+        ["ぞ", "zo"],
+        ["だ", "da"],
+        ["ぢ", "ji"],
+        ["づ", "zu"],
+        ["で", "de"],
+        ["ど", "do"],
+        ["ば", "ba"],
+        ["び", "bi"],
+        ["ぶ", "bu"],
+        ["べ", "be"],
+        ["ぼ", "bo"],
+      ];
+      const hiraganaHandaku = [
+        ["ぱ", "pa"],
+        ["ぴ", "pi"],
+        ["ぷ", "pu"],
+        ["ぺ", "pe"],
+        ["ぽ", "po"],
+      ];
+      const hiraganaYoon = [
+        ["きゃ", "kya"],
+        ["きゅ", "kyu"],
+        ["きょ", "kyo"],
+        ["しゃ", "sha"],
+        ["しゅ", "shu"],
+        ["しょ", "sho"],
+        ["ちゃ", "cha"],
+        ["ちゅ", "chu"],
+        ["ちょ", "cho"],
+        ["にゃ", "nya"],
+        ["にゅ", "nyu"],
+        ["にょ", "nyo"],
+        ["ひゃ", "hya"],
+        ["ひゅ", "hyu"],
+        ["ひょ", "hyo"],
+        ["みゃ", "mya"],
+        ["みゅ", "myu"],
+        ["みょ", "myo"],
+        ["りゃ", "rya"],
+        ["りゅ", "ryu"],
+        ["りょ", "ryo"],
+        ["ぎゃ", "gya"],
+        ["ぎゅ", "gyu"],
+        ["ぎょ", "gyo"],
+        ["じゃ", "ja"],
+        ["じゅ", "ju"],
+        ["じょ", "jo"],
+        ["びゃ", "bya"],
+        ["びゅ", "byu"],
+        ["びょ", "byo"],
+        ["ぴゃ", "pya"],
+        ["ぴゅ", "pyu"],
+        ["ぴょ", "pyo"],
+      ];
+
+      const katakanaDaku = [
+        ["ガ", "ga"],
+        ["ギ", "gi"],
+        ["グ", "gu"],
+        ["ゲ", "ge"],
+        ["ゴ", "go"],
+        ["ザ", "za"],
+        ["ジ", "ji"],
+        ["ズ", "zu"],
+        ["ゼ", "ze"],
+        ["ゾ", "zo"],
+        ["ダ", "da"],
+        ["ヂ", "ji"],
+        ["ヅ", "zu"],
+        ["デ", "de"],
+        ["ド", "do"],
+        ["バ", "ba"],
+        ["ビ", "bi"],
+        ["ブ", "bu"],
+        ["ベ", "be"],
+        ["ボ", "bo"],
+        ["ヴ", "vu"],
+      ];
+      const katakanaHandaku = [
+        ["パ", "pa"],
+        ["ピ", "pi"],
+        ["プ", "pu"],
+        ["ペ", "pe"],
+        ["ポ", "po"],
+      ];
+      const katakanaYoon = [
+        ["キャ", "kya"],
+        ["キュ", "kyu"],
+        ["キョ", "kyo"],
+        ["シャ", "sha"],
+        ["シュ", "shu"],
+        ["ショ", "sho"],
+        ["チャ", "cha"],
+        ["チュ", "chu"],
+        ["チョ", "cho"],
+        ["ニャ", "nya"],
+        ["ニュ", "nyu"],
+        ["ニョ", "nyo"],
+        ["ヒャ", "hya"],
+        ["ヒュ", "hyu"],
+        ["ヒョ", "hyo"],
+        ["ミャ", "mya"],
+        ["ミュ", "myu"],
+        ["ミョ", "myo"],
+        ["リャ", "rya"],
+        ["リュ", "ryu"],
+        ["リョ", "ryo"],
+        ["ギャ", "gya"],
+        ["ギュ", "gyu"],
+        ["ギョ", "gyo"],
+        ["ジャ", "ja"],
+        ["ジュ", "ju"],
+        ["ジョ", "jo"],
+        ["ビャ", "bya"],
+        ["ビュ", "byu"],
+        ["ビョ", "byo"],
+        ["ピャ", "pya"],
+        ["ピュ", "pyu"],
+        ["ピョ", "pyo"],
+        ["ヴァ", "va"],
+        ["ヴィ", "vi"],
+        ["ヴェ", "ve"],
+        ["ヴォ", "vo"],
+      ];
+
+      function buildGrid(id, data) {
+        const grid = document.getElementById(id);
+        data.forEach(([kana, romaji]) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `<span class="kana">${kana}</span><span class="romaji"></span>`;
+          card.onclick = () => {
+            card.classList.toggle("flipped");
+            card.querySelector(".romaji").textContent = card.classList.contains(
+              "flipped"
+            )
+              ? romaji
+              : "";
+          };
+          grid.appendChild(card);
+        });
+      }
+
+      buildGrid("hira-dasar", hiragana);
+      buildGrid("hira-dakuten", hiraganaDaku);
+      buildGrid("hira-handakuten", hiraganaHandaku);
+      buildGrid("hira-yoon", hiraganaYoon);
+      buildGrid("kata-dasar", katakana);
+      buildGrid("kata-dakuten", katakanaDaku);
+      buildGrid("kata-handakuten", katakanaHandaku);
+      buildGrid("kata-yoon", katakanaYoon);
+
+      function showSub(sub) {
+        document
+          .querySelectorAll(".sub-grid")
+          .forEach((g) => g.classList.remove("active"));
+        document
+          .querySelectorAll("#subtabs .sub-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(`hira-${sub}`).classList.add("active");
+        document.getElementById(`kata-${sub}`).classList.add("active");
+        document
+          .querySelector(`#subtabs .sub-btn[onclick="showSub('${sub}')"]`)
+          .classList.add("active");
+      }
+
+      function showTab(tab) {
+        document
+          .querySelectorAll("section")
+          .forEach((s) => s.classList.remove("active"));
+        document
+          .querySelectorAll(".tabs button")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(tab).classList.add("active");
+        document
+          .querySelector(`.tabs button[onclick="showTab('${tab}')"]`)
+          .classList.add("active");
+        document.getElementById("subtabs").style.display =
+          tab === "quiz" ? "none" : "flex";
+      }
+
+      // ===== Quiz =====
+      let quizSet = [];
+
+      const quizSets = {
+        hira: hiragana,
+        kata: katakana,
+        daku: hiraganaDaku.concat(
+          hiraganaHandaku,
+          katakanaDaku,
+          katakanaHandaku
+        ),
+        yoon: hiraganaYoon.concat(katakanaYoon),
+        all: hiragana.concat(
+          katakana,
+          hiraganaDaku,
+          hiraganaHandaku,
+          hiraganaYoon,
+          katakanaDaku,
+          katakanaHandaku,
+          katakanaYoon
+        ),
+      };
+      let currentMode = "hira";
+
+      function startQuiz(mode) {
+        currentMode = mode;
+        document
+          .querySelectorAll(".mode-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelector(`.mode-btn[onclick="startQuiz('${mode}')"]`)
+          .classList.add("active");
+
+        quizSet = quizSets[mode].slice().sort(() => Math.random() - 0.5);
+
+        const grid = document.getElementById("kana-grid");
+        grid.innerHTML = "";
+        quizSet.forEach((pair, i) => {
+          const card = document.createElement("div");
+          card.className = "kana-card";
+          card.dataset.attempts = "0";
+          card.dataset.solved = "0";
+          card.innerHTML = `
+      <div class="kana-char">${pair[0]}</div>
+      <input type="text" autocomplete="off" data-index="${i}" placeholder="romaji">
+      <div class="answer-hint"></div>
+    `;
+          grid.appendChild(card);
+        });
+
+        document.getElementById("quiz-result").classList.remove("show");
+        document.getElementById("finish-btn").style.display = "inline-block";
+        document
+          .getElementById("quiz-mode")
+          .querySelectorAll("button")
+          .forEach((b) => (b.disabled = false));
+        document.getElementById("quiz-instructions").style.display = "block";
+
+        grid.querySelectorAll(".kana-card").forEach((card, i) => {
+          const input = card.querySelector("input");
+          input.value = "";
+          input.disabled = false;
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") checkCard(card, i);
+          });
+          input.addEventListener("blur", () => {
+            if (input.value.trim() !== "") checkCard(card, i);
+          });
+        });
+      }
+
+      function checkCard(card, i) {
+        // already solved correctly or attempts exhausted: do nothing
+        if (card.dataset.solved === "1") return;
+        if (parseInt(card.dataset.attempts) >= 2) return;
+
+        const input = card.querySelector("input");
+        const hint = card.querySelector(".answer-hint");
+        const userAns = input.value.trim().toLowerCase();
+        if (userAns === "") return;
+
+        const correctAns = quizSet[i][1];
+        let attempts = parseInt(card.dataset.attempts) + 1;
+        card.dataset.attempts = String(attempts);
+
+        card.classList.remove("correct", "wrong");
+
+        if (userAns === correctAns) {
+          card.dataset.solved = "1";
+          card.classList.add("correct");
+          input.disabled = true;
+          hint.textContent = "";
+        } else if (attempts >= 2) {
+          card.classList.add("wrong");
+          input.disabled = true;
+          hint.textContent = `Jawaban: ${correctAns}`;
+        } else {
+          card.classList.add("wrong");
+          hint.textContent = `Salah, coba sekali lagi (sisa 1x)`;
+          setTimeout(() => {
+            if (
+              card.dataset.solved !== "1" &&
+              parseInt(card.dataset.attempts) < 2
+            ) {
+              card.classList.remove("wrong");
+              hint.textContent = "";
+              input.value = "";
+              input.focus();
+            }
+          }, 5000);
+        }
+      }
+
+      function finishQuiz() {
+        const cards = document.querySelectorAll("#kana-grid .kana-card");
+        let correctCount = 0;
+
+        cards.forEach((card, i) => {
+          const input = card.querySelector("input");
+          const hint = card.querySelector(".answer-hint");
+          const correctAns = quizSet[i][1];
+
+          if (card.dataset.solved === "1") {
+            correctCount++;
+          } else {
+            // lock remaining cards as wrong (unanswered or used both attempts)
+            card.classList.remove("correct");
+            card.classList.add("wrong");
+            input.disabled = true;
+            hint.textContent = `Jawaban: ${correctAns}`;
+          }
+        });
+
+        const total = quizSet.length;
+        document.getElementById("result-title").textContent =
+          correctCount === total
+            ? "Sempurna! 🎉"
+            : correctCount >= total / 2
+            ? "Bagus!"
+            : "Terus berlatih!";
+        document.getElementById(
+          "result-score"
+        ).textContent = `Skor kamu: ${correctCount} / ${total}`;
+
+        document.getElementById("quiz-result").classList.add("show");
+        document.getElementById("finish-btn").style.display = "none";
+        document.getElementById("quiz-instructions").style.display = "none";
+        document
+          .getElementById("quiz-mode")
+          .querySelectorAll("button")
+          .forEach((b) => (b.disabled = true));
+
+        document
+          .getElementById("quiz-result")
+          .scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      function retryQuiz() {
+        startQuiz(currentMode);
+        document
+          .getElementById("quiz-mode")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function goHome() {
+        document.getElementById("quiz-result").classList.remove("show");
+        startQuiz(currentMode);
+        showTab("hira");
+      }
+
+      startQuiz("hira");
+    </script>
+  </body>
+</html>
