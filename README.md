@@ -4,7 +4,7 @@ Aplikasi web sederhana untuk belajar dan menghafal aksara Jepang: **Hiragana**, 
 
 🔗 **Demo:** https://sitiaisah07.github.io/kuis_hirakana/
 
-## ✨ Fitur
+## Fitur
 
 - **Flashcard Hiragana & Katakana**
   - Kategori: Dasar, Dakuten, Handakuten, Yōon
@@ -22,12 +22,12 @@ Aplikasi web sederhana untuk belajar dan menghafal aksara Jepang: **Hiragana**, 
   - Isi romaji (atau arti untuk Kanji), maksimal 2x percobaan per soal
   - Skor akhir dan opsi untuk mengulang kuis
 
-## 🛠️ Teknologi
+## Teknologi
 
 - HTML, CSS, dan JavaScript murni (tanpa framework)
 - Web Speech API untuk pengucapan suara
 
-## 🚀 Cara Menjalankan
+## Cara Menjalankan
 
 1. Clone repository ini:
    ```bash
@@ -37,10 +37,10 @@ Aplikasi web sederhana untuk belajar dan menghafal aksara Jepang: **Hiragana**, 
 
 Atau langsung akses versi online melalui GitHub Pages di link demo di atas.
 
-## 👤 Dibuat oleh
+## Dibuat oleh
 
 **Aiz**
 
 ---
 
-Belajar bahasa Jepang, satu kana dan kanji dalam satu waktu 🌸
+Belajar bahasa Jepang, satu kana dan kanji dalam satu waktu
