@@ -184,6 +184,27 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+      .cat-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #555;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+      .cat-check input {
+        cursor: pointer;
+        accent-color: var(--accent2);
+      }
+      .cat-check:has(input:checked) {
+        background: var(--accent2);
+        color: #fff;
+        border-color: var(--accent2);
+      }
       .quiz-instructions {
         text-align: center;
         color: #999;
@@ -454,27 +475,37 @@
     <section id="quiz">
       <div class="quiz-box">
         <div class="quiz-mode" id="quiz-mode">
-          <button class="mode-btn active" onclick="startQuiz('hira')">
-            Hiragana Dasar
+          <label class="cat-check"
+            ><input type="checkbox" value="hira" checked /> Hiragana
+            Dasar</label
+          >
+          <label class="cat-check"
+            ><input type="checkbox" value="kata" /> Katakana Dasar</label
+          >
+          <label class="cat-check"
+            ><input type="checkbox" value="daku" /> Dakuten/Handakuten</label
+          >
+          <label class="cat-check"
+            ><input type="checkbox" value="yoon" /> Yōon</label
+          >
+          <label class="cat-check"
+            ><input type="checkbox" value="kanji" /> Kanji</label
+          >
+        </div>
+        <div class="quiz-actions" style="margin-bottom: 20px">
+          <button class="finish-btn" onclick="startQuizFromSelection()">
+            Mulai Kuis
           </button>
-          <button class="mode-btn" onclick="startQuiz('kata')">
-            Katakana Dasar
-          </button>
-          <button class="mode-btn" onclick="startQuiz('daku')">
-            Dakuten/Handakuten
-          </button>
-          <button class="mode-btn" onclick="startQuiz('yoon')">Yōon</button>
-          <button class="mode-btn" onclick="startQuiz('kanji')">Kanji</button>
-          <button class="mode-btn" onclick="startQuiz('all')">Semua</button>
         </div>
         <p class="quiz-instructions" id="quiz-instructions">
-          Isi romaji (atau arti untuk mode Kanji) lalu tekan
+          Isi romaji (atau arti untuk Kanji) lalu tekan
           <strong>Enter</strong> untuk cek tiap kartu (maks. 2x percobaan).
           Klik 🔊 untuk dengar bunyinya. Klik
           <strong>Finish Quiz</strong> jika sudah selesai.
         </p>
 
         <div class="kana-grid" id="kana-grid"></div>
+
 
         <div class="quiz-actions">
           <button class="finish-btn" id="finish-btn" onclick="finishQuiz()">
@@ -956,40 +987,63 @@
       const quizSets = {
         hira: hiragana,
         kata: katakana,
-        daku: hiraganaDaku.concat(
-          hiraganaHandaku,
-          katakanaDaku,
-          katakanaHandaku
-        ),
-        yoon: hiraganaYoon.concat(katakanaYoon),
         kanji: kanjiN5.map(([k, on, kun, meaning]) => [
           k,
           meaning.split(" / ")[0].trim().toLowerCase(),
         ]),
-        all: hiragana.concat(
-          katakana,
-          hiraganaDaku,
-          hiraganaHandaku,
-          hiraganaYoon,
-          katakanaDaku,
-          katakanaHandaku,
-          katakanaYoon
-        ),
       };
-      let currentMode = "hira";
 
-      function startQuiz(mode) {
-        currentMode = mode;
-        document
-          .querySelectorAll(".mode-btn")
-          .forEach((b) => b.classList.remove("active"));
-        document
-          .querySelector(`.mode-btn[onclick="startQuiz('${mode}')"]`)
-          .classList.add("active");
+      function startQuizFromSelection() {
+        const checked = Array.from(
+          document.querySelectorAll('#quiz-mode input[type="checkbox"]:checked')
+        ).map((cb) => cb.value);
 
-        quizSet = quizSets[mode].slice().sort(() => Math.random() - 0.5);
+        if (checked.length === 0) {
+          alert("Pilih minimal satu kategori untuk kuis.");
+          return;
+        }
 
-        const placeholder = mode === "kanji" ? "arti (ID)" : "romaji";
+        const wantHira = checked.includes("hira");
+        const wantKata = checked.includes("kata");
+        const wantDaku = checked.includes("daku");
+        const wantYoon = checked.includes("yoon");
+        const wantKanji = checked.includes("kanji");
+
+        let combined = [];
+        if (wantHira) combined = combined.concat(quizSets.hira);
+        if (wantKata) combined = combined.concat(quizSets.kata);
+
+        if (wantDaku) {
+          if (wantHira) combined = combined.concat(hiraganaDaku, hiraganaHandaku);
+          if (wantKata) combined = combined.concat(katakanaDaku, katakanaHandaku);
+          if (!wantHira && !wantKata)
+            combined = combined.concat(
+              hiraganaDaku,
+              hiraganaHandaku,
+              katakanaDaku,
+              katakanaHandaku
+            );
+        }
+
+        if (wantYoon) {
+          if (wantHira) combined = combined.concat(hiraganaYoon);
+          if (wantKata) combined = combined.concat(katakanaYoon);
+          if (!wantHira && !wantKata)
+            combined = combined.concat(hiraganaYoon, katakanaYoon);
+        }
+
+        if (wantKanji) combined = combined.concat(quizSets.kanji);
+
+        const hasOtherThanKanji =
+          wantHira || wantKata || wantDaku || wantYoon;
+
+        startQuiz(combined, wantKanji && !hasOtherThanKanji);
+      }
+
+      function startQuiz(set, isKanjiOnly) {
+        quizSet = set.slice().sort(() => Math.random() - 0.5);
+
+        const placeholder = isKanjiOnly ? "arti (ID)" : "romaji";
         const grid = document.getElementById("kana-grid");
         grid.innerHTML = "";
         quizSet.forEach((pair, i) => {
@@ -1013,9 +1067,8 @@
         document.getElementById("quiz-result").classList.remove("show");
         document.getElementById("finish-btn").style.display = "inline-block";
         document
-          .getElementById("quiz-mode")
-          .querySelectorAll("button")
-          .forEach((b) => (b.disabled = false));
+          .querySelectorAll('#quiz-mode input[type="checkbox"]')
+          .forEach((cb) => (cb.disabled = false));
         document.getElementById("quiz-instructions").style.display = "block";
 
         grid.querySelectorAll(".kana-card").forEach((card, i) => {
@@ -1108,9 +1161,8 @@
         document.getElementById("finish-btn").style.display = "none";
         document.getElementById("quiz-instructions").style.display = "none";
         document
-          .getElementById("quiz-mode")
-          .querySelectorAll("button")
-          .forEach((b) => (b.disabled = true));
+          .querySelectorAll('#quiz-mode input[type="checkbox"]')
+          .forEach((cb) => (cb.disabled = true));
 
         document
           .getElementById("quiz-result")
@@ -1118,7 +1170,7 @@
       }
 
       function retryQuiz() {
-        startQuiz(currentMode);
+        startQuizFromSelection();
         document
           .getElementById("quiz-mode")
           .scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1126,11 +1178,16 @@
 
       function goHome() {
         document.getElementById("quiz-result").classList.remove("show");
-        startQuiz(currentMode);
+        document.getElementById("kana-grid").innerHTML = "";
+        document.getElementById("finish-btn").style.display = "inline-block";
+        document.getElementById("quiz-instructions").style.display = "block";
+        document
+          .querySelectorAll('#quiz-mode input[type="checkbox"]')
+          .forEach((cb) => (cb.disabled = false));
         showTab("hira");
       }
 
-      startQuiz("hira");
+      startQuizFromSelection();
     </script>
   </body>
 </html>
