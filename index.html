@@ -70,6 +70,7 @@
         padding: 0 16px;
       }
       .card {
+        position: relative;
         background: var(--card);
         border: 1px solid var(--line);
         border-radius: 12px;
@@ -97,6 +98,22 @@
       }
       .card.flipped .romaji {
         color: #e0eef5;
+      }
+      .card .speak-btn {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        background: none;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 2px;
+        opacity: 0.6;
+        color: inherit;
+      }
+      .card .speak-btn:hover {
+        opacity: 1;
       }
       section {
         display: none;
@@ -179,6 +196,7 @@
         margin-bottom: 28px;
       }
       .kana-card {
+        position: relative;
         background: var(--accent2);
         color: #fff;
         border-radius: 12px;
@@ -189,6 +207,22 @@
       .kana-card .kana-char {
         font-size: 2.2rem;
         margin-bottom: 12px;
+      }
+      .kana-card .speak-btn {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        background: none;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 2px;
+        opacity: 0.8;
+        color: #fff;
+      }
+      .kana-card .speak-btn:hover {
+        opacity: 1;
       }
       .kana-card input {
         width: 100%;
@@ -284,12 +318,20 @@
         background: var(--accent);
         color: #fff;
       }
+      .audio-note {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #aaa;
+        max-width: 700px;
+        margin: 0 auto 16px;
+        padding: 0 16px;
+      }
     </style>
   </head>
   <body>
     <header>
       <h1>Belajar Aksara Jepang<span>ひらがな・カタカナ</span></h1>
-      <p>Klik kartu untuk melihat cara bacanya (romaji)</p>
+      <p>Klik kartu untuk melihat romaji, klik 🔊 untuk dengar bunyinya</p>
     </header>
 
     <div class="tabs">
@@ -305,6 +347,11 @@
         Handakuten
       </button>
       <button class="sub-btn" onclick="showSub('yoon')">Yōon</button>
+    </div>
+
+    <div class="audio-note" id="audio-note" style="display:none">
+      ⚠️ Suara menggunakan fitur text-to-speech bawaan browser (memerlukan
+      koneksi internet & dukungan bahasa Jepang pada perangkat).
     </div>
 
     <section id="hira" class="active">
@@ -338,8 +385,8 @@
         </div>
         <p class="quiz-instructions" id="quiz-instructions">
           Isi romaji lalu tekan <strong>Enter</strong> untuk cek tiap kartu
-          (maks. 2x percobaan). Klik <strong>Finish Quiz</strong> jika sudah
-          selesai.
+          (maks. 2x percobaan). Klik 🔊 untuk dengar bunyi kana. Klik
+          <strong>Finish Quiz</strong> jika sudah selesai.
         </p>
 
         <div class="kana-grid" id="kana-grid"></div>
@@ -597,12 +644,44 @@
         ["ヴォ", "vo"],
       ];
 
+      // ===== Text-to-speech =====
+      let jpVoice = null;
+      function pickJapaneseVoice() {
+        const voices = window.speechSynthesis
+          ? window.speechSynthesis.getVoices()
+          : [];
+        jpVoice =
+          voices.find((v) => v.lang === "ja-JP") ||
+          voices.find((v) => v.lang && v.lang.startsWith("ja")) ||
+          null;
+        const note = document.getElementById("audio-note");
+        if (note) note.style.display = jpVoice ? "none" : "block";
+      }
+      if (window.speechSynthesis) {
+        pickJapaneseVoice();
+        window.speechSynthesis.onvoiceschanged = pickJapaneseVoice;
+      }
+
+      function speakKana(kana) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(kana);
+        utter.lang = "ja-JP";
+        if (jpVoice) utter.voice = jpVoice;
+        utter.rate = 0.85;
+        window.speechSynthesis.speak(utter);
+      }
+
       function buildGrid(id, data) {
         const grid = document.getElementById(id);
         data.forEach(([kana, romaji]) => {
           const card = document.createElement("div");
           card.className = "card";
-          card.innerHTML = `<span class="kana">${kana}</span><span class="romaji"></span>`;
+          card.innerHTML = `<button class="speak-btn" type="button" aria-label="Dengarkan ${kana}">🔊</button><span class="kana">${kana}</span><span class="romaji"></span>`;
+          card.querySelector(".speak-btn").onclick = (e) => {
+            e.stopPropagation();
+            speakKana(kana);
+          };
           card.onclick = () => {
             card.classList.toggle("flipped");
             card.querySelector(".romaji").textContent = card.classList.contains(
@@ -651,6 +730,8 @@
           .classList.add("active");
         document.getElementById("subtabs").style.display =
           tab === "quiz" ? "none" : "flex";
+        document.getElementById("audio-note").style.display =
+          !jpVoice && tab !== "quiz" ? "block" : !jpVoice ? "block" : "none";
       }
 
       // ===== Quiz =====
@@ -696,10 +777,15 @@
           card.dataset.attempts = "0";
           card.dataset.solved = "0";
           card.innerHTML = `
+      <button class="speak-btn" type="button" aria-label="Dengarkan ${pair[0]}">🔊</button>
       <div class="kana-char">${pair[0]}</div>
       <input type="text" autocomplete="off" data-index="${i}" placeholder="romaji">
       <div class="answer-hint"></div>
     `;
+          card.querySelector(".speak-btn").onclick = (e) => {
+            e.stopPropagation();
+            speakKana(pair[0]);
+          };
           grid.appendChild(card);
         });
 
